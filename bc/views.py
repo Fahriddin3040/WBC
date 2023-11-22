@@ -126,3 +126,10 @@ class UserAPIView(viewsets.ModelViewSet):
 class SwaggerView(SpectacularSwaggerView):
     permission_classes = (IsAuthenticated,)
     authentication_classes = [SessionAuthentication]
+
+
+def redirect_to_note(request):
+    if request.user.is_authenticated:
+        return HttpResponseRedirect('/api/v1/note')
+    else:
+        return HttpResponseRedirect('/api/auth/login')
