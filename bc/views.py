@@ -3,14 +3,19 @@ from django.http import HttpResponseRedirect
 from django.utils.decorators import classonlymethod
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from drf_spectacular.utils import extend_schema_view, extend_schema
-from rest_framework import viewsets, generics, status
+from rest_framework import viewsets, status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from . import models
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import OperationSerializer, UserSerializer
+
+from .models import Category
+from .serializers import OperationSerializer, UserSerializer, CategorySerializer
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.views import SpectacularSwaggerView
+
 
 @extend_schema_view(
     list=extend_schema(
@@ -42,27 +47,6 @@ class OperationModelViewSet(viewsets.ModelViewSet):
 
         return view
 
-
-    def auth_check(self, request):
-        if request.user.is_authenticated:
-            return 1
-        else:
-            return HttpResponseRedirect('/api/v1/auth/login')
-
-    def user_check(self, data):
-        if not self.request.user.is_authenticated:
-            raise rest_framework.exceptions.NotFound("Пользователь не найден!")
-
-        if data.user.id != self.request.user.id:
-            raise rest_framework.exceptions.NotFound("Требуемый вами объект не найден!")
-
-    def user_check_detail(self, instance):
-        if not self.request.user.is_authenticated:
-            raise rest_framework.exceptions.NotFound("Пользователь не найден!")
-
-        if instance.user.id != self.request.user.id:
-            raise rest_framework.exceptions.NotFound("Требуемый вами объект не найден!")
-
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         self.user_check_detail(instance)
@@ -81,7 +65,6 @@ class OperationModelViewSet(viewsets.ModelViewSet):
 
     @csrf_exempt
     def create(self, request, *args, **kwargs):
-        self.user_check(request.data)
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user=self.request.user)
@@ -90,7 +73,7 @@ class OperationModelViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
 
         try:
-            queryset = models.Operations.objects.filter(user_id=self.request.user.id)
+            queryset = self.queryset.objects.filter(user_id=self.request.user.id)
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True)
@@ -117,15 +100,57 @@ class UserAPIView(viewsets.ModelViewSet):
         refresh = RefreshToken.for_user(user)
         tokens = {
             'refresh': str(refresh),
-            'access': str(refresh.access_token),
+            'access': str(refresh),
         }
 
         return Response(tokens, status=status.HTTP_201_CREATED)
 
 
-class SwaggerView(SpectacularSwaggerView):
-    permission_classes = (IsAuthenticated,)
+class CategoryApiView(viewsets.ModelViewSet):
+    serializer_class = CategorySerializer
+    queryset = models.Category.objects.all()
+    permission_classes = [IsAuthenticated]
     authentication_classes = [SessionAuthentication]
+
+    @classmethod
+    def as_view(cls, actions=None, **initkwargs):
+        def view(request, *args, **kwargs):
+            if request.user.is_authenticated:
+                return super(cls, cls).as_view(actions, **initkwargs)(request, *args, **kwargs)
+            else:
+                return HttpResponseRedirect('/api/v1/auth/login')
+
+        return view
+
+    def get(self, request):
+        queryset = self.queryset.filter(user_id=self.request.user.id)
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
+
+    def get_detail(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        if instance.user != request.user:
+            raise rest_framework.exceptions.NotAcceptable('У вас нет доступа к этой записи!')
+
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=self.request.user)
+        return self.get(request)
+
+
+    # def get_detail(self, request):
+    #     instance = self.get_object()
+    #     self.user_check(instance)
+    #     serializer = self.serializer_class(instance)
+    #     return Response(serializer.data)
+
+    def delete(self, request):
+        instance = self.get_object()
+        instance.delete()
 
 
 def redirect_to_note(request):
@@ -133,3 +158,10 @@ def redirect_to_note(request):
         return HttpResponseRedirect('/api/v1/note')
     else:
         return HttpResponseRedirect('/api/auth/login')
+
+
+def login_access(request):
+    if request.user.is_authenticated:
+        return HttpResponseRedirect('/api/v1/auth/login/')
+    else:
+        return HttpResponseRedirect('/api/v1/note/')

@@ -1,5 +1,4 @@
 from enum import property
-
 from django.contrib.auth.hashers import make_password
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -13,16 +12,6 @@ import os
 
 
 class User(AbstractUser):
-    password_row = models.CharField(max_length=35)
-    is_active = True
-
-
-    def set_p(self):
-        return make_password(self.password_row)
-
-    def save(self, *args, **kwargs):
-        self.password = self.set_p()
-        super().save(*args, **kwargs)
 
     def calculated_balance(self) -> float:
         result = 0
@@ -45,16 +34,22 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
 
 
 class Operations(models.Model):
-    category = [
+    TYPE = [
         (1, 'Росход'),
         (2, 'Доход'),
     ]
-    user = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name='Ползователь')
-    category = models.IntegerField(choices=category, verbose_name='Категория')
-    reason = models.CharField(max_length=75, verbose_name='Причина')
-    amount = models.IntegerField(verbose_name='Финансовая стоимость')
+    user = models.ForeignKey(to='User', on_delete=models.CASCADE, verbose_name='Ползователь')
+    category = models.ForeignKey(to='Category', on_delete=models.CASCADE, verbose_name="Категория")
+    type = models.IntegerField(choices=TYPE, verbose_name='Тип')
+    amount = models.FloatField(verbose_name='Сумма')
     date_time = models.DateTimeField(auto_now=True, verbose_name='Время создания')
 
 
+class Category(models.Model):
+    title = models.CharField(max_length=125, verbose_name='Название категории:')
+    user = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name='Пользователь')
+
+    def __str__(self):
+        return self.title
 
 

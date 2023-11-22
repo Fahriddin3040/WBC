@@ -21,6 +21,11 @@ operation = views.OperationModelViewSet()
 user = views.UserAPIView
 
 urlpatterns = [
-    path('profile/', views.OperationModelViewSet.as_view({'get': 'list', 'post': 'create'})),
-    path('profile/<int:pk>/', views.OperationModelViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
+    path('note/', views.OperationModelViewSet.as_view({'get': 'list', 'post': 'create'})),
+    path('note/<int:pk>/', views.OperationModelViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
+    path('user/', views.UserAPIView.as_view({'get': 'list', 'post': 'create'})),
+    path('user/<int:pk>/', views.UserAPIView.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
+    path('category/', views.CategoryApiView.as_view({'get': 'get', 'post': 'post'})),
+    path('category/<int:pk>', views.CategoryApiView.as_view({'get': 'get_detail', 'put': 'update', 'delete': 'delete'})),
+
 ]
