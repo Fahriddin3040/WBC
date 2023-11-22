@@ -11,7 +11,7 @@ urlpatterns = [
     path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('admin/', admin.site.urls),
-    path('api/v1/', include(urls.urlpatterns)),
+    path('accounts/', include(urls.urlpatterns)),
     path('api/v1/auth/', include('rest_framework.urls')),
     path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('accounts/profile/', views.redirect_to_note, name='redirect-to-note'),
