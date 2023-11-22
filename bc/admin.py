@@ -24,12 +24,17 @@ class OperationAdmin(admin.ModelAdmin):
     fields = ('user', 'type', 'category', 'amount')
     list_display = ('id', 'user', 'type', 'category', 'amount', 'date_time')
     list_display_links = ('id', 'user',)
-    list_filter = ('user', 'type', 'category', 'amount', 'date_time')
-    sortable_by = ('user', 'type', 'category', 'amount', 'date_time')
+    list_filter = ('user', 'type', 'amount', 'date_time')
+    sortable_by = ('user', 'type', 'amount', 'date_time')
+
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     fields = ('title',)
-    list_display = ('title',)
-    list_display_links = ('title',)
+    list_display = ('user', 'title',)
+    list_display_links = ('user', 'title',)
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        super().save_model(request, obj, form, change)
