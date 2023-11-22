@@ -10,7 +10,7 @@ from . import models
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import OperationSerializer, UserSerializer
 from rest_framework.permissions import IsAuthenticated
-
+from drf_spectacular.views import SpectacularSwaggerView
 
 @extend_schema_view(
     list=extend_schema(
@@ -31,6 +31,17 @@ class OperationModelViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]
     serializer_class = OperationSerializer
     queryset = models.Operations.objects.all()
+
+    @classmethod
+    def as_view(cls, actions=None, **initkwargs):
+        def view(request, *args, **kwargs):
+            if request.user.is_authenticated:
+                return super(cls, cls).as_view(actions, **initkwargs)(request, *args, **kwargs)
+            else:
+                return HttpResponseRedirect('/api/v1/auth/login')
+
+        return view
+
 
     def auth_check(self, request):
         if request.user.is_authenticated:
@@ -87,7 +98,6 @@ class OperationModelViewSet(viewsets.ModelViewSet):
 
             serializer = self.get_serializer(queryset, many=True)
             return Response(serializer.data)
-
         except:
             raise rest_framework.exceptions.NotFound("Требуемый вами объект не найден!")
 
@@ -111,3 +121,8 @@ class UserAPIView(viewsets.ModelViewSet):
         }
 
         return Response(tokens, status=status.HTTP_201_CREATED)
+
+
+class SwaggerView(SpectacularSwaggerView):
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = [SessionAuthentication]

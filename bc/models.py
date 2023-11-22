@@ -31,9 +31,9 @@ class User(AbstractUser):
 
         for note in notes:
             if note.category == 1:
-                result -= note.price
+                result -= note.amount
             else:
-                result += note.price
+                result += note.amount
         return result
 
 
@@ -49,11 +49,11 @@ class Operations(models.Model):
         (1, 'Росход'),
         (2, 'Доход'),
     ]
-    user = models.ForeignKey('User', on_delete=models.CASCADE)
-    category = models.IntegerField(choices=category)
-    reason = models.CharField(max_length=75)
-    price = models.IntegerField()
-    date_time = models.DateTimeField(auto_now=True)
+    user = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name='Ползователь')
+    category = models.IntegerField(choices=category, verbose_name='Категория')
+    reason = models.CharField(max_length=75, verbose_name='Причина')
+    amount = models.IntegerField(verbose_name='Финансовая стоимость')
+    date_time = models.DateTimeField(auto_now=True, verbose_name='Время создания')
 
 
 
