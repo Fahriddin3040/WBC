@@ -53,6 +53,7 @@ class Operations(models.Model):
 class Category(models.Model):
     title = models.CharField(max_length=125, verbose_name='Название категории:')
     user = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name='Пользователь')
+    slug = models.SlugField(unique=True, default=123)
 
     @staticmethod
     def get_categories(user):

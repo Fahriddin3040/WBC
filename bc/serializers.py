@@ -23,17 +23,22 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class OperationSerializer(serializers.ModelSerializer):
-    user = serializers.CharField(read_only=True)
-    category = serializers.CharField
+    category = serializers.SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
 
     class Meta:
         model = Operations
-        fields = '__all__'
+        fields = ['id', 'category', 'type', 'amount', 'date_time']
+
+    def __init__(self, *args, **kwargs):
+        super(OperationSerializer, self).__init__(*args, **kwargs)
+        request = self.context.get('request')
+        if request and request.user:
+            self.fields['category'].queryset = Category.get_categories(user=request.user)
+
 
 
 class CategorySerializer(serializers.ModelSerializer):
     user = serializers.CharField(read_only=True)
-
     class Meta:
         model = Category
         fields = '__all__'
