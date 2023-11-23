@@ -3,9 +3,12 @@ import rest_framework.exceptions
 from django.http import HttpResponseRedirect
 from django.utils.decorators import classonlymethod
 from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django_filters import OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend, filters
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import viewsets, status
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -37,9 +40,10 @@ class OperationModelViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]
     serializer_class = OperationSerializer
     queryset = models.Operations.objects.all()
-    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['category', 'date_time', 'type', 'amount']
     search_fields = ['amount']
+
     @classmethod
     def as_view(cls, actions=None, **initkwargs):
         def view(request, *args, **kwargs):
@@ -50,18 +54,19 @@ class OperationModelViewSet(viewsets.ModelViewSet):
 
         return view
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         self.user_check_detail(instance)
         serializer = self.serializer_class(instance=instance)
         return Response(serializer.data, status=200)
-
-    # def update(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     serializer = self.serializer_class(data=instance)
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save()
-
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -74,15 +79,9 @@ class OperationModelViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
         return Response(serializer.data, status=201)
 
-    def list(self, request, *args, **kwargs):
-        data = self.queryset.filter(user_id=request.user.id)
-        serializer = self.serializer_class(data,  many=True)
-        return Response(serializer.data)
 
 
 class UserAPIView(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [SessionAuthentication]
     queryset = models.User.objects.all()
     serializer_class = UserSerializer
 

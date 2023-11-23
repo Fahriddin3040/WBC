@@ -24,11 +24,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 class OperationSerializer(serializers.ModelSerializer):
     category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), write_only=True)
-    category_title = serializers.SerializerMethodField()
+    category_title = serializers.SerializerMethodField(method_name='get_category_title')
+    user = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Operations
-        fields = ['id', 'category', 'category_title', 'type', 'amount', 'date_time']
+        fields = ['id', 'user', 'category', 'category_title', 'type', 'amount', 'date_time']
 
     def __init__(self, *args, **kwargs):
         super(OperationSerializer, self).__init__(*args, **kwargs)
@@ -38,7 +39,10 @@ class OperationSerializer(serializers.ModelSerializer):
             self.fields['category'].queryset = user_categories
 
     def get_category_title(self, obj):
-        return obj.category.title if obj.category else None
+        return obj.category.title
+
+    def get_username(self, obj):
+        return obj.user.username
 
 
 class CategorySerializer(serializers.ModelSerializer):
