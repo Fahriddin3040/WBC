@@ -23,35 +23,27 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class OperationSerializer(serializers.ModelSerializer):
-    category = serializers.SlugRelatedField(slug_field='slug', queryset=Category.objects.all())
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), write_only=True)
+    category_title = serializers.SerializerMethodField()
 
     class Meta:
         model = Operations
-        fields = ['id', 'category', 'type', 'amount', 'date_time']
+        fields = ['id', 'category', 'category_title', 'type', 'amount', 'date_time']
 
     def __init__(self, *args, **kwargs):
         super(OperationSerializer, self).__init__(*args, **kwargs)
         request = self.context.get('request')
         if request and request.user:
-            self.fields['category'].queryset = Category.get_categories(user=request.user)
+            user_categories = Category.objects.filter(user_id=request.user.id)
+            self.fields['category'].queryset = user_categories
 
+    def get_category_title(self, obj):
+        return obj.category.title if obj.category else None
 
 
 class CategorySerializer(serializers.ModelSerializer):
     user = serializers.CharField(read_only=True)
+
     class Meta:
         model = Category
-        fields = '__all__'
-
-    # ('user', 'category', 'reason', 'price', 'date_time')
-
-# @extend_schema(tags=["Posts"]
-# @extend_schema_view(
-#     retrieve=extend_schema(
-#         summary="Детальная информация о посте",
-#         responses={
-#             status.HTTP_500_INTERNAL_SERVER_ERROR: OpenApiResponse(
-#                 response=None,
-#                 description='Описание 500 ответа'),
-#         },
-#     ),)
+        fields = ['title', 'user']

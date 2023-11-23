@@ -8,11 +8,9 @@ from . import views
 from . import models
 
 METHODS_VOC = {
-    'get': 'list',    # Список объектов
-    'get_detail': 'retrieve',  # Получение деталей объекта
+    'get': 'retrieve',  # Получение деталей объекта
     'put': 'update',  # Обновление объекта
     'delete': 'destroy',  # Удаление объекта
-    'post': 'create',  # Создание нового объекта
 }
 
 
@@ -23,8 +21,8 @@ user = views.UserAPIView
 urlpatterns = [
     path('note/', views.OperationModelViewSet.as_view({'get': 'list', 'post': 'create'})),
     path('note/<int:pk>/', views.OperationModelViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
-    path('user/', views.UserAPIView.as_view({'get': 'list', 'post': 'create'})),
-    path('user/<int:pk>/', views.UserAPIView.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
+    path('user/', views.UserAPIView.as_view(METHODS_VOC)),
+    path('auth/register/', views.UserAPIView.as_view({'post': 'create'})),
     path('category/', views.CategoryApiView.as_view({'get': 'get', 'post': 'post'})),
     path('category/<int:pk>', views.CategoryApiView.as_view({'get': 'get_detail', 'put': 'update', 'delete': 'delete'})),
 

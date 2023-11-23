@@ -1,3 +1,4 @@
+import django_filters
 import rest_framework.exceptions
 from django.http import HttpResponseRedirect
 from django.utils.decorators import classonlymethod
@@ -36,7 +37,9 @@ class OperationModelViewSet(viewsets.ModelViewSet):
     authentication_classes = [SessionAuthentication]
     serializer_class = OperationSerializer
     queryset = models.Operations.objects.all()
-
+    filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    filterset_fields = ['category', 'date_time', 'type', 'amount']
+    search_fields = ['amount']
     @classmethod
     def as_view(cls, actions=None, **initkwargs):
         def view(request, *args, **kwargs):
@@ -59,6 +62,7 @@ class OperationModelViewSet(viewsets.ModelViewSet):
     #     serializer.is_valid(raise_exception=True)
     #     serializer.save()
 
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.delete()
@@ -71,18 +75,9 @@ class OperationModelViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=201)
 
     def list(self, request, *args, **kwargs):
-
-        try:
-            queryset = self.queryset.objects.filter(user_id=self.request.user.id)
-            page = self.paginate_queryset(queryset)
-            if page is not None:
-                serializer = self.get_serializer(page, many=True)
-                return self.get_paginated_response(serializer.data)
-
-            serializer = self.get_serializer(queryset, many=True)
-            return Response(serializer.data)
-        except:
-            raise rest_framework.exceptions.NotFound("Требуемый вами объект не найден!")
+        data = self.queryset.filter(user_id=request.user.id)
+        serializer = self.serializer_class(data,  many=True)
+        return Response(serializer.data)
 
 
 class UserAPIView(viewsets.ModelViewSet):
@@ -91,7 +86,7 @@ class UserAPIView(viewsets.ModelViewSet):
     queryset = models.User.objects.all()
     serializer_class = UserSerializer
 
-    @csrf_exempt
+    # @csrf_exempt
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -104,6 +99,30 @@ class UserAPIView(viewsets.ModelViewSet):
         }
 
         return Response(tokens, status=status.HTTP_201_CREATED)
+
+    def retrieve(self, request, *args):
+        user = request.user
+
+        serializer = self.serializer_class(user)
+        return Response(serializer.data, status=201)
+
+    def update(self, request, *args):
+        user = request.user
+
+        serializer = self.serializer_class(instance=user, data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data)
+
+        raise rest_framework.exceptions.NotFound("Ошибка изменения! Возможны некорректные данные!")
+
+    def destroy(self, request, *args):
+        pk = request.user.id
+
+        instance = self.queryset.filter(id=pk)
+        instance.delete()
+
+
 
 
 class CategoryApiView(viewsets.ModelViewSet):
@@ -140,7 +159,6 @@ class CategoryApiView(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save(user=self.request.user)
         return self.get(request)
-
 
     # def get_detail(self, request):
     #     instance = self.get_object()

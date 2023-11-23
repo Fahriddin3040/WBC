@@ -5,7 +5,7 @@ from .models import Operations, User, Category
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     fields = ('first_name', 'last_name', 'username', 'password', 'email',)
-    list_display = ('id', 'get_full_name', 'username', 'password','email', 'calculated_balance')
+    list_display = ('id', 'get_full_name', 'username', 'password', 'email', 'calculated_balance')
     list_display_links = ('id', 'username')
 
     def full_name(self, obj):
