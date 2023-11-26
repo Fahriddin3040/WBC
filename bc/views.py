@@ -1,24 +1,16 @@
-import django_filters
 import rest_framework.exceptions
 from django.http import HttpResponseRedirect
-from django.utils.decorators import classonlymethod
-from django.views.decorators.csrf import csrf_protect, csrf_exempt
-from django_filters import OrderingFilter
-from django_filters.rest_framework import DjangoFilterBackend, filters
+from django.views.decorators.csrf import csrf_exempt
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import viewsets, status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
-from rest_framework.views import APIView
-
 from . import models
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from .models import Category
 from .serializers import OperationSerializer, UserSerializer, CategorySerializer
 from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.views import SpectacularSwaggerView
 
 
 @extend_schema_view(
@@ -41,8 +33,8 @@ class OperationModelViewSet(viewsets.ModelViewSet):
     serializer_class = OperationSerializer
     queryset = models.Operations.objects.all()
     filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['category', 'date_time', 'type', 'amount']
-    search_fields = ['amount']
+    filterset_fields = ['date_time', 'typ', 'amount']
+    search_fields = ['category__title', 'amount']
 
     @classmethod
     def as_view(cls, actions=None, **initkwargs):
@@ -64,7 +56,6 @@ class OperationModelViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        self.user_check_detail(instance)
         serializer = self.serializer_class(instance=instance)
         return Response(serializer.data, status=200)
 

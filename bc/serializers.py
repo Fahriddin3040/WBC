@@ -6,9 +6,11 @@ from rest_framework.serializers import ModelSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
+    balance = serializers.SerializerMethodField(method_name='get_balance',  read_only=True)
+
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'last_name', 'password', 'username', 'email',)
+        fields = ('id', 'first_name', 'last_name', 'username', 'email', 'balance')
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
@@ -21,15 +23,18 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
+    def get_balance(self, obj):
+        return obj.calculated_balance()
+
 
 class OperationSerializer(serializers.ModelSerializer):
-    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), write_only=True)
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all(), )
     category_title = serializers.SerializerMethodField(method_name='get_category_title')
     user = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Operations
-        fields = ['id', 'user', 'category', 'category_title', 'type', 'amount', 'date_time']
+        fields = ['id', 'user', 'category', 'category_title', 'typ', 'amount', 'date_time']
 
     def __init__(self, *args, **kwargs):
         super(OperationSerializer, self).__init__(*args, **kwargs)
@@ -43,6 +48,10 @@ class OperationSerializer(serializers.ModelSerializer):
 
     def get_username(self, obj):
         return obj.user.username
+
+    def get_categories(self):
+        categories = Category.objects.filter(user=self.user)
+        return categories
 
 
 class CategorySerializer(serializers.ModelSerializer):

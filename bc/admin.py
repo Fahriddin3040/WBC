@@ -21,11 +21,11 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Operations)
 class OperationAdmin(admin.ModelAdmin):
-    fields = ('user', 'type', 'category', 'amount')
-    list_display = ('id', 'user', 'type', 'category', 'amount', 'date_time')
+    fields = ('user', 'typ', 'category', 'amount')
+    list_display = ('id', 'user', 'typ', 'category', 'amount', 'date_time')
     list_display_links = ('id', 'user',)
-    list_filter = ('user', 'type', 'amount', 'date_time')
-    sortable_by = ('user', 'type', 'amount', 'date_time')
+    list_filter = ('user', 'typ', 'amount', 'date_time')
+    sortable_by = ('user', 'typ', 'amount', 'date_time')
 
 
 
