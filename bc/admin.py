@@ -32,7 +32,7 @@ class OperationAdmin(admin.ModelAdmin):
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     fields = ('title',)
-    list_display = ('user', 'title',)
+    list_display = ('id', 'user', 'title',)
     list_display_links = ('user', 'title',)
 
     def save_model(self, request, obj, form, change):

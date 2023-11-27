@@ -1,8 +1,9 @@
+import rest_framework.exceptions
 from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiResponse, extend_schema_view
 from rest_framework import serializers
 from .models import Operations, User, Category
-from rest_framework.serializers import ModelSerializer
+from typing import Union
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -23,7 +24,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
-    def get_balance(self, obj):
+    def get_balance(self, obj) -> Union[float, int]:
         return obj.calculated_balance()
 
 
@@ -43,10 +44,10 @@ class OperationSerializer(serializers.ModelSerializer):
             user_categories = Category.objects.filter(user_id=request.user.id)
             self.fields['category'].queryset = user_categories
 
-    def get_category_title(self, obj):
+    def get_category_title(self, obj) -> str:
         return obj.category.title
 
-    def get_username(self, obj):
+    def get_username(self, obj) -> str:
         return obj.user.username
 
     def get_categories(self):

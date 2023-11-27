@@ -1,11 +1,7 @@
-from django.contrib import admin
-from django.http import HttpResponseRedirect
 from django.urls import path
-from rest_framework import viewsets
-from rest_framework.response import Response
-
 from . import views
-from . import models
+
+
 
 METHODS_VOC = {
     'get': 'retrieve',  # Получение деталей объекта
@@ -19,6 +15,7 @@ operation = views.OperationModelViewSet()
 user = views.UserAPIView
 
 urlpatterns = [
+
     path('note/', views.OperationModelViewSet.as_view({'get': 'list', 'post': 'create'})),
     path('profile/', views.UserAPIView.as_view(METHODS_VOC)),
     path('category/', views.CategoryApiView.as_view({'get': 'get', 'post': 'post'})),

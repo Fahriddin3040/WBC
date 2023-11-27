@@ -5,10 +5,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import viewsets, status
 from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import permission_classes
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from . import models
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from .models import Category
 from .serializers import OperationSerializer, UserSerializer, CategorySerializer
 from rest_framework.permissions import IsAuthenticated
 
@@ -20,15 +23,18 @@ from rest_framework.permissions import IsAuthenticated
     update=extend_schema(
         summary="Изменение существующего поста",
     ),
-    partial_update=extend_schema(
+    destroy=extend_schema(
         description='Это вот, типо описание!',
     ),
     create=extend_schema(
         summary="Создание нового поста",
     ),
+    retrieve=extend_schema(
+        summary='Частичный возврат!'
+    ),
 )
 class OperationModelViewSet(viewsets.ModelViewSet):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = [IsAuthenticated]
     authentication_classes = [SessionAuthentication]
     serializer_class = OperationSerializer
     queryset = models.Operations.objects.all()
@@ -36,47 +42,49 @@ class OperationModelViewSet(viewsets.ModelViewSet):
     filterset_fields = ['date_time', 'typ', 'amount']
     search_fields = ['category__title', 'amount']
 
-    @classmethod
-    def as_view(cls, actions=None, **initkwargs):
-        def view(request, *args, **kwargs):
-            if request.user.is_authenticated:
-                return super(cls, cls).as_view(actions, **initkwargs)(request, *args, **kwargs)
-            else:
-                return HttpResponseRedirect('/api/v1/auth/login')
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(user_id=self.request.user.id)
 
-        return view
-
+    @extend_schema(summary="Получить операцию", description="Возвращает все операции авторизированного пользоваетля.")
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
+        queryset = queryset.filter(user_id=self.request.user.id)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
-
+    @extend_schema(summary="Частичное получение", description="Возвращает определённый объект операции.")
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.serializer_class(instance=instance)
         return Response(serializer.data, status=200)
 
+    @extend_schema(summary="Удалить операцию", description="Удаляет определённую запись.")
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.delete()
 
-    @csrf_exempt
     def create(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=self.request.user)
-        return Response(serializer.data, status=201)
+        data = request.data
+        category = data['category']
+        cat_obj = Category.objects.filter(id=category, user_id=request.user)
+
+        if cat_obj:
+            serializer = self.serializer_class(data=data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=201)
+        else:
+            raise rest_framework.exceptions.ValidationError('Выбрана некорректная категория!!!')
 
 
+@extend_schema_view(
 
+)
 class UserAPIView(viewsets.ModelViewSet):
     queryset = models.User.objects.all()
     serializer_class = UserSerializer
 
-    # @csrf_exempt
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -114,22 +122,29 @@ class UserAPIView(viewsets.ModelViewSet):
 
 
 
-
+@extend_schema_view(
+    list=extend_schema(
+        summary="Получить список категорий авторизированного пользователья",
+    ),
+    update=extend_schema(
+        summary="Изменение существующкей категории",
+    ),
+    destroy=extend_schema(
+        summary='Удаление определённой категории',
+    ),
+    create=extend_schema(
+        summary="Добавление категории пользователья",
+    ),
+    retrieve=extend_schema(
+        summary='Частичный возврат!'
+    ),
+)
 class CategoryApiView(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     queryset = models.Category.objects.all()
     permission_classes = [IsAuthenticated]
     authentication_classes = [SessionAuthentication]
 
-    @classmethod
-    def as_view(cls, actions=None, **initkwargs):
-        def view(request, *args, **kwargs):
-            if request.user.is_authenticated:
-                return super(cls, cls).as_view(actions, **initkwargs)(request, *args, **kwargs)
-            else:
-                return HttpResponseRedirect('/api/v1/auth/login')
-
-        return view
 
     def get(self, request):
         queryset = self.queryset.filter(user_id=self.request.user.id)
@@ -150,11 +165,6 @@ class CategoryApiView(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
         return self.get(request)
 
-    # def get_detail(self, request):
-    #     instance = self.get_object()
-    #     self.user_check(instance)
-    #     serializer = self.serializer_class(instance)
-    #     return Response(serializer.data)
 
     def delete(self, request):
         instance = self.get_object()
