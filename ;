@@ -1,0 +1,88 @@
+[33mcommit cd076f4a5028cccaa7de1e2e081ecda440de2293[m[33m ([m[1;36mHEAD -> [m[1;32mswagger[m[33m, [m[1;31morigin/swagger[m[33m)[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Mon Nov 27 17:57:26 2023 +0500
+
+    Добавлен Swagger и настроен под пользователя!
+
+[33mcommit c33bf622c3b5c9fa0bb813a755d3a795732da1a1[m[33m ([m[1;31morigin/bugFix[m[33m)[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Sun Nov 26 12:12:53 2023 +0500
+
+    Добавлен поиск и исправлены баги с изменением и частичным выводом
+
+[33mcommit d0aeb55ea2d50b598ba76a97a10e0075a090ca7c[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Thu Nov 23 17:55:34 2023 +0500
+
+    Походу готово!
+
+[33mcommit e5415d68c2b3c46c64bb08670b2fc74343be2d5f[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Thu Nov 23 16:59:40 2023 +0500
+
+    Походу готово!
+
+[33mcommit c616a10ebd27dd480f521dff3f31b2baa6b32a88[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Thu Nov 23 10:05:09 2023 +0500
+
+    Адресация настроена
+
+[33mcommit 8b4cc8cad134499ceb5ae4dd558b4704c4db1270[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Thu Nov 23 10:04:05 2023 +0500
+
+    Адресация настроена
+
+[33mcommit cafbf590093042d43aa2b22ced2a598e4c8051f6[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Wed Nov 22 23:22:05 2023 +0500
+
+    Адресация настроена
+
+[33mcommit 8affb854375906af26b6396423fc98872b924b02[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Wed Nov 22 21:18:18 2023 +0500
+
+    Адресация настроена
+
+[33mcommit 9d36273d38c8cf6b16d6b8f94ea33f684096b518[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Wed Nov 22 21:17:47 2023 +0500
+
+    Адресация настроена
+
+[33mcommit 716c01db00beebff1580be510e64a4781225bfed[m
+Merge: db1e489 90751ae
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Wed Nov 22 12:50:14 2023 +0500
+
+    Merge remote-tracking branch 'origin/main'
+    
+    # Conflicts:
+    #       bc/views.py
+    #       db.sqlite3
+
+[33mcommit db1e4898aa246ce2c3b8c51b694df592c1da5eab[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Wed Nov 22 12:49:18 2023 +0500
+
+    Адресация настроена
+
+[33mcommit 938f1c98056b357a2eb4ea7dd6cbd06efc775c18[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Wed Nov 22 11:55:40 2023 +0500
+
+    Адресация настроена
+
+[33mcommit 90751aefb386f66e8ed09d83b575681fb1a28839[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Wed Nov 22 11:55:40 2023 +0500
+
+    Адресация настроена
+
+[33mcommit 561bfb02e988b3514cc7b814cda90df115f0c2aa[m
+Author: Fahriddin3040 <fahriddin3040@gmail.com>
+Date:   Tue Nov 21 20:57:07 2023 +0500
+
+    Готово
