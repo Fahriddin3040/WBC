@@ -1,6 +1,5 @@
 import rest_framework.exceptions
 from django.http import HttpResponseRedirect
-from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema_view, extend_schema
 from rest_framework import viewsets, status
@@ -10,10 +9,10 @@ from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from . import models
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from .models import Category
-from .serializers import OperationSerializer, UserSerializer, CategorySerializer
+from .models import Category, User
+from .serializers import OperationSerializer, UserSerializer, CategorySerializer, TokenObtainSerializer
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 @extend_schema_view(
@@ -85,8 +84,18 @@ class UserAPIView(viewsets.ModelViewSet):
     queryset = models.User.objects.all()
     serializer_class = UserSerializer
 
+    @staticmethod
+    def get_user_token(user):
+        refresh = RefreshToken.for_user(user)
+
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
+        }
+
     def create(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
+
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
@@ -104,10 +113,13 @@ class UserAPIView(viewsets.ModelViewSet):
         serializer = self.serializer_class(user)
         return Response(serializer.data, status=201)
 
-    def update(self, request, *args):
-        user = request.user
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
 
-        serializer = self.serializer_class(instance=user, data=request.data)
+        partial = kwargs.pop('partial', False)
+        instance = User.objects.get(id=request.user.id)
+        serializer = self.serializer_class(instance=instance, data=request.data, partial=partial)
+
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
@@ -119,7 +131,6 @@ class UserAPIView(viewsets.ModelViewSet):
 
         instance = self.queryset.filter(id=pk)
         instance.delete()
-
 
 
 @extend_schema_view(
@@ -145,7 +156,6 @@ class CategoryApiView(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     authentication_classes = [SessionAuthentication]
 
-
     def get(self, request):
         queryset = self.queryset.filter(user_id=self.request.user.id)
         serializer = self.serializer_class(queryset, many=True)
@@ -165,7 +175,6 @@ class CategoryApiView(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
         return self.get(request)
 
-
     def delete(self, request):
         instance = self.get_object()
         instance.delete()
@@ -183,3 +192,12 @@ def login_access(request):
         return HttpResponseRedirect('/api/v1/auth/login/')
     else:
         return HttpResponseRedirect('/api/v1/note/')
+
+
+def tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access.token),
+    }

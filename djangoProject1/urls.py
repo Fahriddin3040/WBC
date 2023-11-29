@@ -4,6 +4,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from bc import urls, views
 from drf_spectacular.views import SpectacularSwaggerView, SpectacularAPIView, SpectacularRedocView
 from drf_spectacular.types import OpenApiTypes
+from rest_framework_simplejwt.views import TokenBlacklistView
+
 
 urlpatterns = [
     path('api/v1/doc/schema/', SpectacularAPIView.as_view(), name='schema'),
@@ -17,6 +19,7 @@ urlpatterns = [
     path('accounts/profile/', views.redirect_to_note, name='redirect-to-note'),
     path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/v1/token/verify/', TokenVerifyView.as_view()),
+    path('api/v1/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist')
 ]
 
 
