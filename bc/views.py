@@ -44,18 +44,16 @@ class OperationModelViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         return queryset.filter(user_id=self.request.user.id)
 
-    @extend_schema(summary="Получить операцию", description="Возвращает все операции авторизированного пользоваетля.")
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.filter(user_id=self.request.user.id)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
 
     @extend_schema(summary="Частичное получение", description="Возвращает определённый объект операции.")
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = self.serializer_class(instance=instance)
-        return Response(serializer.data, status=200)
+        serializer = self.get_serializer(instance=instance)
+
+        if instance.user != request.user:
+            raise rest_framework.exceptions.NotAcceptable('У вас нет доступа к этой записи!')
+
+        return Response(serializer.data)
 
     @extend_schema(summary="Удалить операцию", description="Удаляет определённую запись.")
     def destroy(self, request, *args, **kwargs):
@@ -88,14 +86,7 @@ class UserAPIView(viewsets.ModelViewSet):
 
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-
-        refresh = RefreshToken.for_user(user)
-        tokens = {
-            'refresh': str(refresh),
-            'access': str(refresh),
-        }
-
-        return Response(tokens, status=status.HTTP_201_CREATED)
+        return Response(user, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, *args):
         user = request.user
@@ -150,6 +141,14 @@ class CategoryApiView(viewsets.ModelViewSet):
         queryset = self.queryset.filter(user_id=self.request.user.id)
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        if instance.user != request.user:
+            raise rest_framework.exceptions.NotAcceptable('У вас нет доступа к этой записи!')
+
+        super().update(request, *args,  **kwargs)
 
     def get_detail(self, request, *args, **kwargs):
         instance = self.get_object()

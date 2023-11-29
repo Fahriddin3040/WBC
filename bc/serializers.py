@@ -1,11 +1,8 @@
-import rest_framework.exceptions
-from rest_framework import status
-from drf_spectacular.utils import extend_schema, OpenApiResponse, extend_schema_view
 from rest_framework import serializers
 from .models import Operations, User, Category
 from typing import Union
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth.hashers import make_password
 
 
 class UserSerializer(serializers.ModelSerializer):

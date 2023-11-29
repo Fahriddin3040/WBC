@@ -11,13 +11,6 @@ class UserAdmin(admin.ModelAdmin):
     def full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}   "
 
-    def save_model(self, request, obj, form, change):
-        if 'password' in form.changed_data:
-            obj.set_password(obj.password)
-        super().save_model(request, obj, form, change)
-
-
-
 
 @admin.register(Operations)
 class OperationAdmin(admin.ModelAdmin):
@@ -26,7 +19,6 @@ class OperationAdmin(admin.ModelAdmin):
     list_display_links = ('id', 'user',)
     list_filter = ('user', 'typ', 'amount', 'date_time')
     sortable_by = ('user', 'typ', 'amount', 'date_time')
-
 
 
 @admin.register(Category)

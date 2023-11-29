@@ -1,11 +1,26 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from rest_framework.authtoken.models import Token
+from django.contrib.auth.hashers import make_password
 
 
-class User(AbstractUser):
+class User(AbstractUser, UserManager):
+
+    def save(self, *args, **kwargs):
+        self.password = make_password(self.password)
+
+        super().save(*args, **kwargs)
+
+
+    def _create_user(self, username, email, password, **extra_fields):
+        username = self.username
+        email = self.email
+        password = self.password
+
+        super()._create_user(username, email, password, **extra_fields)
+
     def calculated_balance(self) -> float:
         result = 0
 
