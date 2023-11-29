@@ -5,7 +5,7 @@ from . import views
 
 METHODS_VOC = {
     'get': 'retrieve',  # Получение деталей объекта
-    'put': 'update',  # Обновление объекта
+    'patch': 'update',  # Обновление объекта
     'delete': 'destroy',  # Удаление объекта
 }
 

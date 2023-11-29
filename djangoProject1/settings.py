@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'rest_framework.authtoken',
     'django_filters',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 AUTH_USER_MODEL = 'bc.User'
@@ -78,7 +79,8 @@ TEMPLATES = [
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+
 }
 
 WSGI_APPLICATION = 'djangoProject1.wsgi.application'
@@ -117,7 +119,12 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Your project description',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    'SECURITY': [ ]
     # OTHER SETTINGS
+}
+
+SIMPLE_JWT = {
+  "TOKEN_OBTAIN_SERIALIZER": "bc.serializers.TokenObtainSerializer",
 }
 
 
