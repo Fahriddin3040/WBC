@@ -6,6 +6,7 @@ from django.contrib.auth.hashers import make_password
 
 
 class UserSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     balance = serializers.SerializerMethodField(method_name='get_balance',  read_only=True)
     password = serializers.CharField(write_only=True)
 
@@ -14,7 +15,16 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'first_name', 'last_name', 'password', 'username', 'email', 'balance')
 
     def get_balance(self, obj) -> Union[float, int]:
-        return obj.calculated_balance()
+        result = 0
+
+        notes = Operations.objects.filter(user=obj)
+
+        for note in notes:
+            if note.typ == 1:
+                result -= note.amount
+            elif note.typ == 2:
+                result += note.amount
+        return result
 
 
 class OperationSerializer(serializers.ModelSerializer):
@@ -49,7 +59,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ['title', 'user']
+        fields = ['id', 'user', 'title']
 
 
 class TokenObtainSerializer(TokenObtainPairSerializer):

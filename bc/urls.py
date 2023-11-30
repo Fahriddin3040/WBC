@@ -2,14 +2,11 @@ from django.urls import path
 from . import views
 
 
-
 METHODS_VOC = {
     'get': 'retrieve',  # Получение деталей объекта
     'patch': 'update',  # Обновление объекта
     'delete': 'destroy',  # Удаление объекта
 }
-
-
 
 operation = views.OperationModelViewSet()
 user = views.UserAPIView

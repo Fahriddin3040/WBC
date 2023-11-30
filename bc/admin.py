@@ -1,15 +1,23 @@
 from django.contrib import admin
+from django.contrib.auth.hashers import make_password
+
 from .models import Operations, User, Category
 
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     fields = ('first_name', 'last_name', 'username', 'password', 'email',)
-    list_display = ('id', 'get_full_name', 'username', 'password', 'email', 'calculated_balance')
+    list_display = ('id', 'get_full_name', 'username', 'password', 'email')
     list_display_links = ('id', 'username')
 
     def full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}   "
+
+    def save_model(self, request, obj, form, change):
+        password = make_password(obj.password)
+        obj.password = password
+
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Operations)

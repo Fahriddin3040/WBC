@@ -1,12 +1,12 @@
 import rest_framework.exceptions
+from django.contrib.auth.hashers import make_password
 from django.http import HttpResponseRedirect
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema_view, extend_schema
-from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from .serializers import OperationSerializer, UserSerializer, CategorySerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication
 from rest_framework import viewsets, status
@@ -44,6 +44,19 @@ class OperationModelViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset()
         return queryset.filter(user_id=self.request.user.id)
 
+    def update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        partial = kwargs.pop('partial', False)
+        data = request.data
+        instance = self.get_object()
+        serializer = self.serializer_class(instance=instance, data=data, partial=partial)
+
+        if instance.category.user == request.user:
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=201)
+
+        raise rest_framework.exceptions.ValidationError('У вас нет доступа в заданной категории!')
 
     @extend_schema(summary="Частичное получение", description="Возвращает определённый объект операции.")
     def retrieve(self, request, *args, **kwargs):
@@ -59,6 +72,8 @@ class OperationModelViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.delete()
+
+        return Response("Запись успешно удалена!")
 
     def create(self, request, *args, **kwargs):
         data = request.data
@@ -82,11 +97,13 @@ class UserAPIView(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     def create(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        return Response(user, status=status.HTTP_201_CREATED)
+        password = make_password(serializer.validated_data['password'])
+        serializer.validated_data['password'] = password
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, *args):
         user = request.user
@@ -112,6 +129,8 @@ class UserAPIView(viewsets.ModelViewSet):
 
         instance = self.queryset.filter(id=pk)
         instance.delete()
+
+        return Response("Ваш аккаунт был успешно удалён! !")
 
 
 @extend_schema_view(
@@ -148,7 +167,7 @@ class CategoryApiView(viewsets.ModelViewSet):
         if instance.user != request.user:
             raise rest_framework.exceptions.NotAcceptable('У вас нет доступа к этой записи!')
 
-        super().update(request, *args,  **kwargs)
+        return super().update(request, *args,  **kwargs)
 
     def get_detail(self, request, *args, **kwargs):
         instance = self.get_object()
