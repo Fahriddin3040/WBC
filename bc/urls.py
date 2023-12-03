@@ -18,6 +18,6 @@ urlpatterns = [
     path('auth/register/', views.UserAPIView.as_view({'post': 'create'})),
     path('operations/', views.OperationModelViewSet.as_view({'get': 'list', 'post': 'create'})),
     path('operations/<int:pk>/', views.OperationModelViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'})),
-    path('category/<int:pk>', views.CategoryApiView.as_view({'get': 'get_detail', 'put': 'update', 'destroy': 'delete'})),
+    path('category/<int:pk>', views.CategoryApiView.as_view({'get': 'get_detail', 'put': 'update', 'delete': 'delete'})),
 
 ]

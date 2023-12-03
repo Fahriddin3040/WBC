@@ -5,7 +5,8 @@ from rest_framework.authtoken.models import Token
 
 
 class User(AbstractUser):
-    pass
+    username = models.CharField(max_length=60, unique=True)
+    email = models.EmailField(unique=True)
 
 
 class Operations(models.Model):
@@ -18,6 +19,7 @@ class Operations(models.Model):
     typ = models.IntegerField(choices=TYP, verbose_name='Тип')
     amount = models.FloatField(verbose_name='Сумма')
     date_time = models.DateTimeField(auto_now=True, verbose_name='Время создания')
+    comment = models.CharField(max_length=75, default='')
 
 
 class Category(models.Model):

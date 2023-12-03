@@ -83,7 +83,6 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
     )
 }
 
@@ -94,8 +93,12 @@ WSGI_APPLICATION = 'djangoProject1.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'BudgetController',
+        'USER': 'krago',
+        'PASSWORD': '0089',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 
@@ -134,7 +137,8 @@ SPECTACULAR_SETTINGS = {
 }
 
 SIMPLE_JWT = {
-  "TOKEN_OBTAIN_SERIALIZER": "bc.serializers.TokenObtainSerializer",
+    "ACCESS_TOKEN_LIFE_TIME": timedelta(minutes=60),
+    "TOKEN_OBTAIN_SERIALIZER": "bc.serializers.TokenObtainSerializer",
 }
 
 

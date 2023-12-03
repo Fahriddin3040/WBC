@@ -33,7 +33,7 @@ from . import models
 )
 class OperationModelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    authentication_classes = [JWTAuthentication, SessionAuthentication]
+    authentication_classes = [JWTAuthentication]
     serializer_class = OperationSerializer
     queryset = models.Operations.objects.all()
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -50,15 +50,16 @@ class OperationModelViewSet(viewsets.ModelViewSet):
         data = request.data
         instance = self.get_object()
         serializer = self.serializer_class(instance=instance, data=data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        category = serializer.validated_data['category']
 
-        if instance.category.user == request.user:
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=201)
+        if category.user != request.user:
+            raise rest_framework.exceptions.ValidationError("У вас нет доступа в заданной категории!")
 
-        raise rest_framework.exceptions.ValidationError('У вас нет доступа в заданной категории!')
+        serializer.save()
+        return Response(serializer.data, status=201)
 
-    @extend_schema(summary="Частичное получение", description="Возвращает определённый объект операции.")
+    @extend_schema(summary="Частичное получение", description='Возвращает определённый объект операции.')
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance=instance)
@@ -96,6 +97,10 @@ class UserAPIView(viewsets.ModelViewSet):
     queryset = models.User.objects.all()
     serializer_class = UserSerializer
 
+    def set_password(self, row_password):
+        password = make_password(row_password)
+        return password
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -113,13 +118,15 @@ class UserAPIView(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         kwargs['partial'] = True
-
         partial = kwargs.pop('partial', False)
         instance = User.objects.get(id=request.user.id)
         serializer = self.serializer_class(instance=instance, data=request.data, partial=partial)
 
         if serializer.is_valid(raise_exception=True):
+            password = self.set_password(serializer.validated_data['password'])
+            serializer.validated_data['password'] = password
             serializer.save()
+
             return Response(serializer.data)
 
         raise rest_framework.exceptions.NotFound("Ошибка изменения! Возможны некорректные данные!")
@@ -141,7 +148,7 @@ class UserAPIView(viewsets.ModelViewSet):
         summary="Изменение существующкей категории",
     ),
     destroy=extend_schema(
-        summary='Удаление определённой категории',
+        summary="Удаление определённой категории",
     ),
     create=extend_schema(
         summary="Добавление категории пользователья",
@@ -154,39 +161,53 @@ class CategoryApiView(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     queryset = models.Category.objects.all()
     permission_classes = [IsAuthenticated]
-    authentication_classes = [JWTAuthentication, SessionAuthentication]
+    authentication_classes = [JWTAuthentication]
+
+    def is_unique(self, title):
+        unique = bool(self.queryset.filter(title=title))
+
+        if unique == True:
+            raise rest_framework.exceptions.NotFound('Некорректно')
 
     def get(self, request):
         queryset = self.queryset.filter(user_id=self.request.user.id)
         serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
+    def raise_NOT_FOUND(self):
+        raise rest_framework.exceptions.NotAcceptable('У вас нет доступа к этой записи!')
+
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
+        title = instance.title
+        if instance.user == request.user:
+            return super().update(request, *args,  **kwargs)
 
-        if instance.user != request.user:
-            raise rest_framework.exceptions.NotAcceptable('У вас нет доступа к этой записи!')
-
-        return super().update(request, *args,  **kwargs)
+        self.raise_NOT_FOUND()
 
     def get_detail(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         if instance.user != request.user:
-            raise rest_framework.exceptions.NotAcceptable('У вас нет доступа к этой записи!')
+            self.raise_NOT_FOUND()
 
         return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
+        self.is_unique(serializer.validated_data['title'])
         serializer.save(user=self.request.user)
-        return self.get(request)
+        return Response(serializer.data)
 
     def delete(self, request, pk):
-        super().destroy()
         instance = self.get_object()
+
+        if instance.user != request.user:
+            self.raise_NOT_FOUND()
         instance.delete()
+
+        return Response('Выбранная категория была улалена!')
 
 
 def redirect_to_note(request):

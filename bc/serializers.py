@@ -34,7 +34,7 @@ class OperationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Operations
-        fields = ['id', 'user', 'category', 'category_title', 'typ', 'amount', 'date_time']
+        fields = ['id', 'user', 'category', 'category_title', 'typ', 'comment',  'amount', 'date_time']
 
     def __init__(self, *args, **kwargs):
         super(OperationSerializer, self).__init__(*args, **kwargs)
